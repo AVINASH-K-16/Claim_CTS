@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using ClaimSubmission.Web.Models;
 using ClaimSubmission.Web.Services;
-using ClaimSubmission.MVC.Services;
 
 namespace ClaimSubmission.Web.Controllers
 {
@@ -13,13 +13,10 @@ namespace ClaimSubmission.Web.Controllers
     public class ClaimController : Controller
     {
         private readonly IClaimApiService _claimApiService;
-        private readonly IConfiguration _configuration;
 
-        public ClaimController(IConfiguration configuration)
+        public ClaimController(IClaimApiService claimApiService)
         {
-            _configuration = configuration;
-            string apiBaseUrl = _configuration["ApiBaseUrl"] ?? "http://localhost:9090";
-            _claimApiService = new ClaimApiService(apiBaseUrl);
+            _claimApiService = claimApiService;
         }
 
         // Display List of Claims

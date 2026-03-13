@@ -40,9 +40,9 @@ namespace ClaimSubmission.Web.Controllers
                 {
                     // Store user information in session
                     HttpContext.Session.SetString("UserId", user.UserId.ToString());
-                    HttpContext.Session.SetString("UserName", user.UserName);
-                    HttpContext.Session.SetString("FullName", user.FullName);
-                    HttpContext.Session.SetString("UserToken", user.Token);
+                    HttpContext.Session.SetString("UserName", user.UserName ?? string.Empty);
+                    HttpContext.Session.SetString("FullName", user.FullName ?? string.Empty);
+                    HttpContext.Session.SetString("UserToken", user.Token ?? string.Empty);
                     HttpContext.Session.SetString("IsAuthenticated", "true");
 
                     // Note: For persistent authentication, consider using cookie authentication middleware

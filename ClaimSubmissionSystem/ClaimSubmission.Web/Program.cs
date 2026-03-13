@@ -4,7 +4,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Add session services
 builder.Services.AddSession(options =>
@@ -30,12 +29,36 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add HttpClientFactory and authentication service
-builder.Services.AddHttpClient<AuthenticationService>((provider, client) =>
+// Add HttpClientFactory and service registrations
+builder.Services.AddHttpClient<AuthenticationService>()
+    .ConfigureHttpClient((provider, client) =>
+    {
+        // HttpClient configuration can be done here if needed
+    });
+
+// Register IAuthenticationService -> AuthenticationService with apiBaseUrl injection
+builder.Services.AddScoped<IAuthenticationService>(provider =>
 {
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient(nameof(AuthenticationService));
     var config = provider.GetRequiredService<IConfiguration>();
     var apiBaseUrl = config["ApiBaseUrl"] ?? "http://localhost:5285";
-    client.BaseAddress = new Uri(apiBaseUrl);
+    return new AuthenticationService(httpClient, apiBaseUrl);
+});
+
+builder.Services.AddHttpClient<ClaimApiService>()
+    .ConfigureHttpClient((provider, client) =>
+    {
+        // HttpClient configuration can be done here if needed
+    });
+
+builder.Services.AddScoped<IClaimApiService>(provider =>
+{
+    var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient(nameof(ClaimApiService));
+    var config = provider.GetRequiredService<IConfiguration>();
+    var apiBaseUrl = config["ApiBaseUrl"] ?? "http://localhost:5285";
+    return new ClaimApiService(httpClient, apiBaseUrl);
 });
 
 // Add authentication

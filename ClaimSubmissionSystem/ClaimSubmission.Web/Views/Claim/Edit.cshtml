@@ -1,0 +1,98 @@
+@model ClaimSubmission.Web.Models.EditClaimViewModel
+
+@{
+    ViewData["Title"] = "Edit Claim";
+}
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2>Edit Claim</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("List", "Claim")" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="row g-3">
+        <input type="hidden" name="ClaimId" value="@Model.ClaimId" />
+
+        <div class="col-md-6">
+            <label for="ClaimNumber" class="form-label">Claim Number</label>
+            <input type="text" class="form-control @(ViewData.ModelState["ClaimNumber"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                   id="ClaimNumber" name="ClaimNumber" value="@Model.ClaimNumber" required />
+            <span asp-validation-for="ClaimNumber" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label for="PatientName" class="form-label">Patient Name</label>
+            <input type="text" class="form-control @(ViewData.ModelState["PatientName"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                   id="PatientName" name="PatientName" value="@Model.PatientName" required />
+            <span asp-validation-for="PatientName" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label for="ProviderName" class="form-label">Provider Name</label>
+            <input type="text" class="form-control @(ViewData.ModelState["ProviderName"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                   id="ProviderName" name="ProviderName" value="@Model.ProviderName" required />
+            <span asp-validation-for="ProviderName" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label for="DateOfService" class="form-label">Date of Service</label>
+            <input type="date" class="form-control @(ViewData.ModelState["DateOfService"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                   id="DateOfService" name="DateOfService" value="@Model.DateOfService.ToString("yyyy-MM-dd")" required />
+            <span asp-validation-for="DateOfService" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label for="ClaimAmount" class="form-label">Claim Amount</label>
+            <input type="number" step="0.01" class="form-control @(ViewData.ModelState["ClaimAmount"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                   id="ClaimAmount" name="ClaimAmount" value="@Model.ClaimAmount" required />
+            <span asp-validation-for="ClaimAmount" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label for="ClaimStatus" class="form-label">Claim Status</label>
+            <select class="form-select @(ViewData.ModelState["ClaimStatus"]?.Errors.Any() == true ? "is-invalid" : "")" 
+                    id="ClaimStatus" name="ClaimStatus" required>
+                <option value="">-- Select Status --</option>
+                @if (Model.ClaimStatus == "Pending") { <option value="Pending" selected>Pending</option> } else { <option value="Pending">Pending</option> }
+                @if (Model.ClaimStatus == "Approved") { <option value="Approved" selected>Approved</option> } else { <option value="Approved">Approved</option> }
+                @if (Model.ClaimStatus == "Rejected") { <option value="Rejected" selected>Rejected</option> } else { <option value="Rejected">Rejected</option> }
+                @if (Model.ClaimStatus == "Processing") { <option value="Processing" selected>Processing</option> } else { <option value="Processing">Processing</option> }
+            </select>
+            <span asp-validation-for="ClaimStatus" class="invalid-feedback"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Update Claim
+            </button>
+            <a href="@Url.Action("List", "Claim")" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    @if (ViewBag.ValidationErrors != null)
+    {
+        <div class="alert alert-danger mt-3">
+            <strong>Validation Errors:</strong>
+            <ul>
+                @foreach (var error in ViewBag.ValidationErrors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -4,18 +4,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-// using Newtonsoft.Json;
 using ClaimSubmission.Web.Models;
 
-namespace ClaimSubmission.MVC.Services
+namespace ClaimSubmission.Web.Services
 {
-    /// <summary>
-    /// Service to communicate with Web API for Claim operations
-    /// </summary>
+    
     public interface IClaimApiService
     {
-        Task<List<ClaimListViewModel>> GetAllClaimsAsync(string token, int pageNumber = 1, int pageSize = 10);
-        Task<ClaimListViewModel> GetClaimByIdAsync(string token, int claimId);
+        Task<List<ClaimViewListModel>> GetAllClaimsAsync(string token, int pageNumber = 1, int pageSize = 10);
+        Task<ClaimViewListModel?> GetClaimByIdAsync(string token, int claimId);
         Task<int> CreateClaimAsync(string token, AddClaimViewModel claim);
         Task UpdateClaimAsync(string token, EditClaimViewModel claim);
         Task DeleteClaimAsync(string token, int claimId);
@@ -23,19 +20,19 @@ namespace ClaimSubmission.MVC.Services
 
     public class ClaimApiService : IClaimApiService
     {
-        private readonly string _apiBaseUrl;
         private readonly HttpClient _httpClient;
+        private readonly string _apiBaseUrl;
 
-        public ClaimApiService(string apiBaseUrl)
+        public ClaimApiService(HttpClient httpClient, string apiBaseUrl)
         {
+            _httpClient = httpClient;
             _apiBaseUrl = apiBaseUrl;
-            _httpClient = new HttpClient();
         }
 
         /// <summary>
         /// Get all claims from API
         /// </summary>
-        public async Task<List<ClaimListViewModel>> GetAllClaimsAsync(string token, int pageNumber = 1, int pageSize = 10)
+        public async Task<List<ClaimViewListModel>> GetAllClaimsAsync(string token, int pageNumber = 1, int pageSize = 10)
         {
             try
             {
@@ -52,13 +49,30 @@ namespace ClaimSubmission.MVC.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            var content = await response.Content.ReadAsStringAsync();
-                            dynamic result = JsonConvert.DeserializeObject(content);
-                            
-                            if (result != null && result.data != null && result.data.items != null)
+                            var responseContent = await response.Content.ReadAsStringAsync();
+                            if (string.IsNullOrWhiteSpace(responseContent))
                             {
-                                return JsonConvert.DeserializeObject<List<ClaimListViewModel>>(
-                                    result.data.items.ToString());
+                                return new List<ClaimViewListModel>();
+                            }
+
+                            try
+                            {
+                                using (JsonDocument doc = JsonDocument.Parse(responseContent))
+                                {
+                                    JsonElement root = doc.RootElement;
+                                    if (root.TryGetProperty("data", out JsonElement dataElement) &&
+                                        dataElement.TryGetProperty("items", out JsonElement itemsElement))
+                                    {
+                                        var claims = JsonSerializer.Deserialize<List<ClaimViewListModel>>(
+                                            itemsElement.GetRawText(),
+                                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                        return claims ?? new List<ClaimViewListModel>();
+                                    }
+                                }
+                            }
+                            catch (JsonException ex)
+                            {
+                                throw new Exception($"Failed to parse API response: {ex.Message}", ex);
                             }
                         }
                         else
@@ -73,13 +87,13 @@ namespace ClaimSubmission.MVC.Services
                 throw new Exception($"Error retrieving claims: {ex.Message}", ex);
             }
 
-            return new List<ClaimListViewModel>();
+            return new List<ClaimViewListModel>();
         }
 
         /// <summary>
         /// Get specific claim by ID from API
         /// </summary>
-        public async Task<ClaimListViewModel> GetClaimByIdAsync(string token, int claimId)
+        public async Task<ClaimViewListModel?> GetClaimByIdAsync(string token, int claimId)
         {
             try
             {
@@ -96,18 +110,41 @@ namespace ClaimSubmission.MVC.Services
                     {
                         if (response.IsSuccessStatusCode)
                         {
-                            var content = await response.Content.ReadAsStringAsync();
-                            dynamic result = JsonConvert.DeserializeObject(content);
-
-                            if (result != null && result.data != null)
+                            var responseContent = await response.Content.ReadAsStringAsync();
+                            if (string.IsNullOrWhiteSpace(responseContent))
                             {
-                                return JsonConvert.DeserializeObject<ClaimListViewModel>(
-                                    result.data.ToString());
+                                return null;
                             }
+
+                            try
+                            {
+                                using (JsonDocument doc = JsonDocument.Parse(responseContent))
+                                {
+                                    JsonElement root = doc.RootElement;
+                                    if (root.TryGetProperty("data", out JsonElement dataElement))
+                                    {
+                                        return JsonSerializer.Deserialize<ClaimViewListModel>(
+                                            dataElement.GetRawText(),
+                                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                    }
+                                    else
+                                    {
+                                        return null;
+                                    }
+                                }
+                            }
+                            catch (JsonException ex)
+                            {
+                                throw new Exception($"Failed to parse API response: {ex.Message}", ex);
+                            }
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        {
+                            return null;
                         }
                         else
                         {
-                            throw new Exception($"Claim not found");
+                            throw new Exception($"API Error: {response.StatusCode}");
                         }
                     }
                 }
@@ -116,8 +153,6 @@ namespace ClaimSubmission.MVC.Services
             {
                 throw new Exception($"Error retrieving claim: {ex.Message}", ex);
             }
-
-            return null;
         }
 
         /// <summary>
@@ -129,8 +164,9 @@ namespace ClaimSubmission.MVC.Services
             {
                 string url = $"{_apiBaseUrl}/api/claims";
 
+                var jsonContent = JsonSerializer.Serialize(claim);
                 var content = new StringContent(
-                    JsonConvert.SerializeObject(claim),
+                    jsonContent,
                     System.Text.Encoding.UTF8,
                     "application/json");
 
@@ -147,11 +183,26 @@ namespace ClaimSubmission.MVC.Services
                         if (response.IsSuccessStatusCode)
                         {
                             var responseContent = await response.Content.ReadAsStringAsync();
-                            dynamic result = JsonConvert.DeserializeObject(responseContent);
-
-                            if (result != null && result.data != null)
+                            if (string.IsNullOrWhiteSpace(responseContent))
                             {
-                                return Convert.ToInt32(result.data.claimId);
+                                throw new Exception("Empty response from API");
+                            }
+
+                            try
+                            {
+                                using (JsonDocument doc = JsonDocument.Parse(responseContent))
+                                {
+                                    JsonElement root = doc.RootElement;
+                                    if (root.TryGetProperty("data", out JsonElement dataElement) &&
+                                        dataElement.TryGetProperty("claimId", out JsonElement claimIdElement))
+                                    {
+                                        return claimIdElement.GetInt32();
+                                    }
+                                }
+                            }
+                            catch (JsonException ex)
+                            {
+                                throw new Exception($"Failed to parse API response: {ex.Message}", ex);
                             }
                         }
                         else
@@ -168,18 +219,20 @@ namespace ClaimSubmission.MVC.Services
 
             return -1;
         }
-
-        /// <summary>
-        /// Update an existing claim via API
-        /// </summary>
-        public async Task UpdateClaimAsync(string token, EditClaimViewModel claim)
+            public async Task UpdateClaimAsync(string token, EditClaimViewModel claim)
         {
             try
             {
+                if (claim == null)
+                {
+                    throw new ArgumentNullException(nameof(claim));
+                }
+
                 string url = $"{_apiBaseUrl}/api/claims/{claim.ClaimId}";
 
+                var jsonContent = JsonSerializer.Serialize(claim);
                 var content = new StringContent(
-                    JsonConvert.SerializeObject(claim),
+                    jsonContent,
                     System.Text.Encoding.UTF8,
                     "application/json");
 

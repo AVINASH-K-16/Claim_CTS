@@ -22,6 +22,22 @@ build_property._RazorSourceGeneratorDebug =
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
+[/workspaces/Claim_CTS/ClaimSubmissionSystem/ClaimSubmission.Web/Views/Authentication/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXV0aGVudGljYXRpb24vTG9naW4uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/Claim_CTS/ClaimSubmissionSystem/ClaimSubmission.Web/Views/Claim/Add.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2xhaW0vQWRkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/Claim_CTS/ClaimSubmissionSystem/ClaimSubmission.Web/Views/Claim/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2xhaW0vRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/Claim_CTS/ClaimSubmissionSystem/ClaimSubmission.Web/Views/Claim/List.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2xhaW0vTGlzdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/Claim_CTS/ClaimSubmissionSystem/ClaimSubmission.Web/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
