@@ -1,0 +1,112 @@
+@model TaskManagement.Web.ViewModels.TaskListViewModel
+
+@{
+    ViewData["Title"] = "Task Management";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>Task Management System</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="@Url.Action("Create", "Task")" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New Task
+            </a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.Tasks.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model.Tasks)
+                    {
+                        <tr class="@(task.IsCompleted ? "table-success" : "")">
+                            <td>@task.Id</td>
+                            <td>
+                                <strong>@task.Title</strong>
+                            </td>
+                            <td>@task.Description</td>
+                            <td>
+                                @if (task.IsCompleted)
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            </td>
+                            <td>@task.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <a href="@Url.Action("Details", "Task", new { id = task.Id })" class="btn btn-sm btn-info">View</a>
+                                <a href="@Url.Action("Edit", "Task", new { id = task.Id })" class="btn btn-sm btn-warning">Edit</a>
+
+                                @if (!task.IsCompleted)
+                                {
+                                    <form action="@Url.Action("Complete", "Task", new { id = task.Id })" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark as completed?');">
+                                            Complete
+                                        </button>
+                                    </form>
+                                }
+
+                                <form action="@Url.Action("Delete", "Task", new { id = task.Id })" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No tasks found. <a href="@Url.Action("Create", "Task")">Create one</a>!
+        </div>
+    }
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>

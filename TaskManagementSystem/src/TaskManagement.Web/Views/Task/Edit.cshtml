@@ -1,0 +1,8 @@
+@model TaskManagement.Web.ViewModels.TaskFormViewModel
+
+@{
+    ViewData["Title"] = "Edit Task";
+}
+
+<!-- Reuse the Create view since it handles both create and edit -->
+@Html.Partial("Create", Model)
